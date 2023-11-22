@@ -108,7 +108,6 @@ namespace AmplitudeSharp.Api
         {
             Time = DateTime.UtcNow.ToUnixEpoch();
             EventType = Uri.EscapeUriString(eventName);
-            EventType = eventName;
             Properties = ToDictionary(eventProperties);
 
             this["library"] = $"{nameof(AmplitudeSharp)}/{LibraryVersion}";
