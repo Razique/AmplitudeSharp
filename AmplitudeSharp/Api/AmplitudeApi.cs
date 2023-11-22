@@ -5,6 +5,8 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
+using Newtonsoft.Json;
+
 namespace AmplitudeSharp.Api
 {
     public abstract class IAmplitudeApi
@@ -59,32 +61,27 @@ namespace AmplitudeSharp.Api
 
         public override Task<SendResult> Identify(AmplitudeIdentify identification)
         {
-            string data = Newtonsoft.Json.JsonConvert.SerializeObject(identification);
-
-            return DoApiCall("identify", "identification", data);
+            return DoApiCall("identify", "identification", identification);
         }
 
         public override Task<SendResult> SendEvents(List<AmplitudeEvent> events)
         {
-            string data = Newtonsoft.Json.JsonConvert.SerializeObject(events);
-
-            return DoApiCall("httpapi", "event", data);
+            return DoApiCall("httpapi", "event", events);
         }
 
-        private async Task<SendResult> DoApiCall(string endPoint, string paramName, string paramData)
+        private async Task<SendResult> DoApiCall(string endPoint, string paramName, object paramData)
         {
             SendResult result = SendResult.Success;
 
             if (!OfflineMode)
             {
-                string boundary = "----" + DateTime.Now.Ticks;
+               string boundary = "----" + DateTime.Now.Ticks;
+               MultipartFormDataContent content = new MultipartFormDataContent(boundary);
+               var keyContent = new StringContent(apiKey, UTF8Encoding.UTF8, "text/plain");
+               content.Add(keyContent, "api_key");
 
-                MultipartFormDataContent content = new MultipartFormDataContent(boundary);
-                var keyContent = new StringContent(apiKey, UTF8Encoding.UTF8, "text/plain");
-                content.Add(keyContent, "api_key");
-
-                var data = new StringContent(paramData, UTF8Encoding.UTF8, "application/json");
-                content.Add(data, paramName);
+               var data = new StringContent(JsonConvert.SerializeObject(paramData), UTF8Encoding.UTF8, "application/json");
+               content.Add(data, paramName);
 
                 var apiURL = "https://api.amplitude.com";
                 if (apiRegion == "eu")
